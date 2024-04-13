@@ -1,0 +1,423 @@
+basePath: /api/v1
+definitions:
+  github_com_SanExpett_banners-backend_internal_server_delivery.ErrorResponse:
+    properties:
+      body:
+        $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ResponseBodyError'
+      status:
+        type: integer
+    type: object
+  github_com_SanExpett_banners-backend_internal_server_delivery.Response:
+    properties:
+      body:
+        $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ResponseBody'
+      status:
+        type: integer
+    type: object
+  github_com_SanExpett_banners-backend_internal_server_delivery.ResponseBody:
+    properties:
+      message:
+        type: string
+    type: object
+  github_com_SanExpett_banners-backend_internal_server_delivery.ResponseBodyError:
+    properties:
+      error:
+        type: string
+    type: object
+  github_com_SanExpett_banners-backend_internal_server_delivery.ResponseBodyID:
+    properties:
+      id:
+        type: integer
+    type: object
+  github_com_SanExpett_banners-backend_internal_server_delivery.ResponseID:
+    properties:
+      body:
+        $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ResponseBodyID'
+      status:
+        type: integer
+    type: object
+  github_com_SanExpett_banners-backend_pkg_models.Banner:
+    properties:
+      banner_id:
+        type: integer
+      content:
+        $ref: '#/definitions/github_com_SanExpett_banners-backend_pkg_models.Content'
+      created_at:
+        type: string
+      feature_id:
+        type: integer
+      is_active:
+        type: boolean
+      tag_ids:
+        items:
+          type: integer
+        type: array
+      updated_at:
+        type: string
+    type: object
+  github_com_SanExpett_banners-backend_pkg_models.Content:
+    properties:
+      text:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  github_com_SanExpett_banners-backend_pkg_models.PreBanner:
+    properties:
+      content:
+        $ref: '#/definitions/github_com_SanExpett_banners-backend_pkg_models.Content'
+      feature_id:
+        type: integer
+      is_active:
+        type: boolean
+      tag_ids:
+        items:
+          type: integer
+        type: array
+    type: object
+  github_com_SanExpett_banners-backend_pkg_models.PreUser:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+  internal_banner_delivery.BannerListResponse:
+    properties:
+      body:
+        items:
+          $ref: '#/definitions/github_com_SanExpett_banners-backend_pkg_models.Banner'
+        type: array
+      status:
+        type: integer
+    type: object
+  internal_banner_delivery.BannerResponse:
+    properties:
+      body:
+        $ref: '#/definitions/github_com_SanExpett_banners-backend_pkg_models.Content'
+      status:
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: This is a server of banner server.
+  title: BANNERS project API
+  version: "1.0"
+paths:
+  /banner/add:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        add Banner by data
+        Error.status can be:
+        StatusErrBadRequest      = 400
+        StatusErrInternalServer  = 500
+      parameters:
+      - description: Banner data for adding
+        in: body
+        name: banner
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_SanExpett_banners-backend_pkg_models.PreBanner'
+      - description: admin token
+        in: header
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ResponseID'
+        "222":
+          description: Error
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: add banner
+      tags:
+      - Banner
+  /banner/delete:
+    delete:
+      consumes:
+      - application/json
+      description: |-
+        delete banner for author using user id from header\jwt.
+        This totally removed banner. Recovery will be impossible
+      parameters:
+      - description: banner id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: admin token
+        in: header
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.Response'
+        "222":
+          description: Error
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: delete banner
+      tags:
+      - Banner
+  /banner/get:
+    get:
+      consumes:
+      - application/json
+      description: get banner by id
+      parameters:
+      - description: banner id
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_banner_delivery.BannerResponse'
+        "222":
+          description: Error
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: get banner
+      tags:
+      - Banner
+  /banner/get_list:
+    get:
+      consumes:
+      - application/json
+      description: get banners list
+      parameters:
+      - description: feature_id
+        in: query
+        name: feature_id
+        type: integer
+      - description: tag_id
+        in: query
+        name: tag_id
+        type: integer
+      - description: limit Banners
+        in: query
+        name: limit
+        type: integer
+      - description: offset of Banners
+        in: query
+        name: offset
+        type: integer
+      - description: admin token
+        in: header
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_banner_delivery.BannerListResponse'
+        "222":
+          description: Error
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: get banners list
+      tags:
+      - Banner
+  /banner/update:
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        update banner by data
+        Error.status can be:
+        StatusErrBadRequest      = 400
+        StatusErrInternalServer  = 500
+      parameters:
+      - description: admin token
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: banner data for updating
+        in: body
+        name: Banner
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_SanExpett_banners-backend_pkg_models.PreBanner'
+      - description: banner id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ResponseID'
+        "222":
+          description: Error
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: update banner
+      tags:
+      - Banner
+  /logout:
+    post:
+      description: logout in app
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.Response'
+        "222":
+          description: Error
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: logout
+      tags:
+      - auth
+  /signin:
+    get:
+      description: signin in app
+      parameters:
+      - description: user login for signin
+        in: query
+        name: login
+        required: true
+        type: string
+      - description: user password for signin
+        in: query
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.Response'
+        "222":
+          description: Error
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: signin
+      tags:
+      - auth
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        signup in app
+        Error.status can be:
+        StatusErrBadRequest      = 400
+        StatusErrInternalServer  = 500
+      parameters:
+      - description: user data for signup
+        in: body
+        name: preUser
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_SanExpett_banners-backend_pkg_models.PreUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.Response'
+        "222":
+          description: Error
+          schema:
+            $ref: '#/definitions/github_com_SanExpett_banners-backend_internal_server_delivery.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: signup
+      tags:
+      - auth
+schemes:
+- http
+swagger: "2.0"
