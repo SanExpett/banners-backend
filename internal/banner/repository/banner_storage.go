@@ -68,7 +68,7 @@ func (b *BannerStorage) addTag(ctx context.Context, tx pgx.Tx, tagID, bannerID u
 	_, err = tx.Exec(ctx, SQLAddTag, bannerID, tagID)
 
 	if err != nil {
-		b.logger.Errorf("in addTag: tagID=%d bannerID%d", tagID, bannerID)
+		b.logger.Errorf("in addTag: tagID=%d bannerID=%d", tagID, bannerID)
 
 		return fmt.Errorf(myerrors.ErrTemplate, err)
 	}
@@ -90,14 +90,21 @@ func (b *BannerStorage) AddBanner(ctx context.Context, preBanner *models.PreBann
 			return fmt.Errorf(myerrors.ErrTemplate, err)
 		}
 
+		bannerID = id
+
+		return nil
+	})
+	if err != nil {
+		return 0, fmt.Errorf(myerrors.ErrTemplate, err)
+	}
+
+	err = pgx.BeginFunc(ctx, b.pool, func(tx pgx.Tx) error {
 		for _, tagID := range preBanner.TagIDs {
 			err = b.addTag(ctx, tx, tagID, bannerID)
 			if err != nil {
 				return fmt.Errorf(myerrors.ErrTemplate, err)
 			}
 		}
-
-		bannerID = id
 
 		return nil
 	})

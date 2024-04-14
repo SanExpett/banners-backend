@@ -44,7 +44,8 @@ func NewMux(ctx context.Context, configMux *ConfigMux, userService userdelivery.
 		middleware.SetupCORS(userHandler.SignUpHandler, configMux.addrOrigin, configMux.schema)))
 	router.Handle("/api/v1/signin", middleware.Context(ctx,
 		middleware.SetupCORS(userHandler.SignInHandler, configMux.addrOrigin, configMux.schema)))
-	router.Handle("/api/v1/logout", middleware.Context(ctx, http.HandlerFunc(userHandler.LogOutHandler)))
+	router.Handle("/api/v1/logout", middleware.Context(ctx,
+		middleware.SetupCORS(userHandler.LogOutHandler, configMux.addrOrigin, configMux.schema)))
 
 	router.Handle("/api/v1/banner/add", middleware.Context(ctx,
 		middleware.SetupCORS(bannerHandler.AddBannerHandler, configMux.addrOrigin, configMux.schema)))
