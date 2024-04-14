@@ -15,7 +15,7 @@ var _ IBannerStorage = (*bannerrepo.BannerStorage)(nil)
 
 type IBannerStorage interface {
 	AddBanner(ctx context.Context, preBanner *models.PreBanner, userID uint64) (uint64, error)
-	GetBanner(ctx context.Context, bannerID uint64) (*models.Content, error)
+	GetBanner(ctx context.Context, bannerID uint64, isAdmin bool) (*models.Content, error)
 	GetBannersList(ctx context.Context, featureID uint64, tagID uint64, limit uint64,
 		offset uint64) ([]*models.Banner, error)
 	UpdateBanner(ctx context.Context, newBanner *models.PreBanner, bannerID uint64, userID uint64) error
@@ -50,8 +50,8 @@ func (b *BannerService) AddBanner(ctx context.Context, r io.Reader, userID uint6
 	return bannerID, nil
 }
 
-func (b *BannerService) GetBanner(ctx context.Context, bannerID uint64) (*models.Content, error) {
-	banner, err := b.storage.GetBanner(ctx, bannerID)
+func (b *BannerService) GetBanner(ctx context.Context, bannerID uint64, isAdmin bool) (*models.Content, error) {
+	banner, err := b.storage.GetBanner(ctx, bannerID, isAdmin)
 	if err != nil {
 		return nil, fmt.Errorf(myerrors.ErrTemplate, err)
 	}

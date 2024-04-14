@@ -17,7 +17,7 @@ var _ IBannerService = (*usecases.BannerService)(nil)
 
 type IBannerService interface {
 	AddBanner(ctx context.Context, r io.Reader, userID uint64) (uint64, error)
-	GetBanner(ctx context.Context, bannerID uint64) (*models.Content, error)
+	GetBanner(ctx context.Context, bannerID uint64, isAdmin bool) (*models.Content, error)
 	GetBannersList(ctx context.Context, featureID uint64, tagID uint64, limit uint64,
 		offset uint64) ([]*models.Banner, error)
 	UpdateBanner(ctx context.Context, r io.Reader, bannerID uint64, userID uint64) error
@@ -122,7 +122,7 @@ func (b *BannerHandler) GetBannerHandler(w http.ResponseWriter, r *http.Request)
 
 	ctx := r.Context()
 
-	_, err := delivery.GetUserIDFromHeader(r)
+	isAdmin, err := delivery.GetIsAdminFromHeader(r)
 	if err != nil {
 		delivery.HandleErr(w, b.logger, err)
 
@@ -136,7 +136,7 @@ func (b *BannerHandler) GetBannerHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	banner, err := b.service.GetBanner(ctx, bannerID)
+	banner, err := b.service.GetBanner(ctx, bannerID, isAdmin)
 	if err != nil {
 		delivery.HandleErr(w, b.logger, err)
 

@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	ErrBannerNotFound       = myerrors.NewError("Этот баннер не найден")
-	ErrNoAffectedBannerRows = myerrors.NewError("Не получилось обновить данные баннера")
+	ErrBannerNotFound             = myerrors.NewError("Этот баннер не найден")
+	ErrNoAffectedBannerRows       = myerrors.NewError("Не получилось обновить данные баннера")
+	ErrNotAdminGetNotActiveBanner = myerrors.NewError("Только админ может получить неактивный баннер")
 
 	NameSeqBanner = pgx.Identifier{"public", "banner_id_seq"} //nolint:gochecknoglobals
 )
@@ -113,8 +114,8 @@ func (b *BannerStorage) selectBannerContentByID(ctx context.Context,
 	SQLSelectBanner := `SELECT title, text, url FROM public."banner" WHERE id=$1`
 	bannerContent := &models.Content{} //nolint:exhaustruct
 
-	BannerRow := tx.QueryRow(ctx, SQLSelectBanner, bannerID)
-	if err := BannerRow.Scan(&bannerContent.Title, &bannerContent.Text, &bannerContent.URL); err != nil {
+	bannerRow := tx.QueryRow(ctx, SQLSelectBanner, bannerID)
+	if err := bannerRow.Scan(&bannerContent.Title, &bannerContent.Text, &bannerContent.URL); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf(myerrors.ErrTemplate, ErrBannerNotFound)
 		}
@@ -127,10 +128,38 @@ func (b *BannerStorage) selectBannerContentByID(ctx context.Context,
 	return bannerContent, nil
 }
 
-func (b *BannerStorage) GetBanner(ctx context.Context, bannerID uint64) (*models.Content, error) {
+func (b *BannerStorage) selectBannerIsActiveByID(ctx context.Context,
+	tx pgx.Tx, bannerID uint64,
+) (bool, error) {
+	SQLSelectBanner := `SELECT is_active FROM public."banner" WHERE id=$1`
+	var bannerIsActive bool
+
+	bannerIsActiveRow := tx.QueryRow(ctx, SQLSelectBanner, bannerID)
+	if err := bannerIsActiveRow.Scan(&bannerIsActive); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, fmt.Errorf(myerrors.ErrTemplate, ErrBannerNotFound)
+		}
+
+		b.logger.Errorf("error with bannerId=%d: %+v", bannerID, err)
+
+		return false, fmt.Errorf(myerrors.ErrTemplate, err)
+	}
+
+	return bannerIsActive, nil
+}
+
+func (b *BannerStorage) GetBanner(ctx context.Context, bannerID uint64, isAdmin bool) (*models.Content, error) {
 	var bannerContent *models.Content
 
 	err := pgx.BeginFunc(ctx, b.pool, func(tx pgx.Tx) error {
+		isActive, err := b.selectBannerIsActiveByID(ctx, tx, bannerID)
+		if err != nil {
+			return err
+		}
+		if !isActive && !isAdmin {
+			return fmt.Errorf(myerrors.ErrTemplate, ErrNotAdminGetNotActiveBanner)
+		}
+
 		bannerContentInner, err := b.selectBannerContentByID(ctx, tx, bannerID)
 		if err != nil {
 			return err
